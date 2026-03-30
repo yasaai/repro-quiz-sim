@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Simulator</title>
+
+<style>
+body { font-family: Arial; margin:0; background:#f5f5f5; }
+
+.container {
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-top:40px;
+}
+
+.home {
+    text-align:center;
+    padding:100px 20px;
+}
+
+.go-btn {
+    font-size:24px;
+    padding:15px 40px;
+    background:#28a745;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.timer { font-weight:bold; margin-bottom:10px; color:#dc3545; text-align:right; }
+
+.options label {
+    display:block;
+    margin:8px 0;
+    padding:10px;
+    border:1px solid #ddd;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.selected {
+    background:#cce5ff !important;
+}
+
+button {
+    padding:10px 20px;
+    margin:5px;
+    border:none;
+    border-radius:6px;
+    background:#007bff;
+    color:white;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="home" class="container home">
+    <h1>Quiz Simulator</h1>
+    <button class="go-btn" onclick="startQuiz()">GO!</button>
+</div>
+
+<div id="quizContainer" class="container" style="display:none;">
+    <div class="timer">Waktu: <span id="time">00:00</span></div>
+    <h2 id="result"></h2>
+    <div id="quiz"></div>
+    <div id="nav-buttons"></div>
+</div>
+
+<script>
+// ================= DATA SOAL =================
+let questions = [
+    {
+        q: "Pernyataan yang benar mengenai perineum, kecuali:",
+        options: [
+            "The perineum is diamond-shaped",
+            "Sacrotuberous ligaments are laterally",
+            "Some obstetricians apply the term perineum to the region between vagina and anus",
+            "Lies inferior to the inferior pelvic aperture",
+            "Inferior pubic and ischial rami are anterolaterally"
+        ],
+        answer: 1,
+        explain: "Salah karena sacrotuberous ligaments berada posterolateral, bukan lateral."
+    },
+    {
+        q: "Semua struktur ini terdapat pada deep perineal pouch wanita, kecuali:",
+        options: [
+            "Proximal part of the urethra",
+            "Urinary bladder",
+            "External urethral sphincter muscles",
+            "Deep transverse perineal muscles",
+            "Related vessels and nerves"
+        ],
+        answer: 1,
+        explain: "Urinary bladder tidak termasuk isi deep perineal pouch."
+    },
+    {
+        q: "Pilih satu pernyataan tentang uterus yang benar:",
+        options: [
+            "Memiliki dua surface yaitu vesical dan intestine surface",
+            "Mendapat vascularisasi dari uterine artery yang berjalan dekat fundus",
+            "Dinding body uterus terdiri dari perimetrium, mesometrium, dan endometrium",
+            "Tidak seluruh fundus uterus diliputi peritoneum",
+            "Uterus dibagi menjadi fundus, body, dan cervix"
+        ],
+        answer: 4,
+        explain: "Pembagian uterus yang umum: fundus, body, dan cervix."
+    },
+    {
+        q: "Semua yang tersebut di bawah ini membentuk pelvic inlet, kecuali:",
+        options: [
+            "Iliopubic eminence",
+            "Pecten pubis",
+            "Posterior border of pubic crest",
+            "Sacral promontory",
+            "Arcuate line of ilium"
+        ],
+        answer: 2,
+        explain: "Pelvic inlet dibatasi linea terminalis; posterior border of pubic crest bukan bagian utamanya."
+    },
+    {
+        q: "Semua pernyataan tentang lesser pelvis benar, kecuali:",
+        options: [
+            "Pada wanita adalah narrow, deep, dan tapering",
+            "Terletak antara pelvic inlet dan pelvic outlet",
+            "Dibentuk oleh hip bones, sacrum, dan coccyx",
+            "Merupakan true pelvic cavity dan deep part dari perineum terutama ischioanal fossae",
+            "Signifikan dalam pelayanan Obstetri dan Ginekologi"
+        ],
+        answer: 0,
+        explain: "Lesser pelvis wanita justru lebih lebar dan dangkal, bukan narrow dan deep."
+    },
+    {
+        q: "Sebagian besar cabang sacral plexus keluar pelvis melalui greater sciatic foramen, kecuali:",
+        options: [
+            "Pudendal nerve",
+            "Superior gluteal nerve",
+            "Inferior gluteal nerve",
+            "Sciatic nerve",
+            "Obturator nerve"
+        ],
+        answer: 4,
+        explain: "Obturator nerve keluar melalui obturator canal, bukan greater sciatic foramen."
+    },
+    {
+        q: "Vascularisasi untuk scrotum bagian posterior adalah cabang dari:",
+        options: [
+            "Dorsal artery of penis",
+            "External pudendal artery",
+            "Deep artery of penis",
+            "Internal pudendal artery",
+            "Internal iliac artery"
+        ],
+        answer: 3,
+        explain: "Posterior scrotal artery merupakan cabang dari internal pudendal artery."
+    },
+    {
+        q: "Semua saraf ini melayani kulit scrotum, kecuali:",
+        options: [
+            "Genitofemoral nerve",
+            "Posterior femoral cutaneous nerve",
+            "Ilioinguinal nerve",
+            "Inferior cluneal nerve",
+            "Perineal nerve"
+        ],
+        answer: 3,
+        explain: "Inferior cluneal nerve mempersarafi kulit bokong bagian bawah, bukan skrotum."
+    },
+    {
+        q: "Sisa-sisa paramesonephric (Mullerian) duct pada pria ialah:",
+        options: [
+            "Appendix testis",
+            "Paradidymis",
+            "Epigenital tubules",
+            "Paragenital tubules",
+            "Ductuli efferentes"
+        ],
+        answer: 0,
+        explain: "Appendix testis merupakan remnan duktus paramesonefrikus."
+    },
+    {
+        q: "Seorang perempuan datang kepada saudara dengan keluhan  belum pernah mendapatkan menstruasi sebelumnya (primary amenorrhea). Dari tidak terdapat uterus dan ovari. Terdapat pula undescended testis pada pemeriksaan CT scan. Dari pemeriksaan kryotyping ditemukan bahwa kromosom pasien ada lah  46 XY.  Apa kemungkinan  diagnosis pada pasien ini? :",
+        options: [
+            "Complete androgen insensitivity syndrome",
+            "Turner syndrome",
+            "Edward syndrome",
+            "Patau syndrome",
+            "Klinefelter syndrome"
+        ],
+        answer: 0,
+        explain: "Gambaran khas CAIS: kariotipe 46 XY, testis tidak turun, tidak ada uterus, fenotip perempuan."
+    },
+    {
+        q: "Vagina bagian atas pada wanita secara embriologi berasal dari:",
+        options: [
+            "Bagian atas dari paramesonephric ducts",
+            "Sinovaginal bulbs",
+            "Bagian bawah dari paramesonephric ducts",
+            "Bagian tengah dari paramesonephric ducts",
+            "Urogenital sinus"
+        ],
+        answer: 2,
+        explain: "Bagian atas vagina berasal dari bagian kaudal duktus paramesonefrikus."
+    },
+    {
+        q: "Seorang anak laki-laki berusia 6 tahun mempunyai riwayat infeksi saluran kemih berulang. Kultur urin telah menumbuhkan Escherichia coli, Proteus mirabilis. Pemeriksaan fisik sekarang menunjukkan adanya  penyempitan pembukaan uretra yang tidak normal pada bagian dorsal penis, sekitar 1,7 cm dari ujung glans penis.  Ada juga testis kriptorkismus di sebelah kanan. Istilah apa yang paling tepat menggambarkan kelainan penis pada anak?",
+        options: [
+            "Bowen disease",
+            "Phimosis",
+            "Balanitis",
+            "Epispadias",
+            "Hypospadias"
+        ],
+        answer: 3,
+        explain: "Epispadias adalah muara uretra di sisi dorsal penis."
+    },
+    {
+        q: "Manakah pernyataan dibawah ini yang benar untuk ovarium pada wanita sebelum pubertas:",
+        options: [
+            "Tunica albuginea, germinal epithelium, folikel primordial, dan folikel sekunder",
+            "Tunica albuginea, germinal epithelium, folikel sekunder, dan folikel de Graaf",
+            "Tunica albuginea, germinal epithelium, dan folikel primordial",
+            "Tunica albuginea, germinal epithelium, folikel de Graaf, dan corpus luteum",
+            "Tunica albuginea, germinal epithelium, folikel primordial, dan corpus luteum"
+        ],
+        answer: 2,
+        explain: "Sebelum pubertas hanya ditemukan folikel primordial, belum ada folikel matang atau corpus luteum."
+    },
+    {
+        q: "Ciri histologi endometrium fase sekresi adalah:",
+        options: [
+            "Endometrium tipis dan hanya lapisan basal",
+            "Endometrium tebal, kelenjar lurus",
+            "Endometrium tebal, lumen kelenjar lebar dan berkelok-kelok",
+            "Endometrium tipis dan hanya lapisan fungsional",
+            "Endometrium tebal dan hanya lapisan basal"
+        ],
+        answer: 2,
+        explain: "Fase sekresi ditandai endometrium tebal dan kelenjar berkelok dengan lumen lebar."
+    },
+    {
+        q: "Pernyataan yang benar tentang serviks adalah:",
+        options: [
+            "Pada kehamilan sekresi kelenjar serviks sangat encer",
+            "Pada fase sekresi sekresi kelenjar serviks sangat encer",
+            "Serviks bagian luar dilapisi epitel selapis kolumnar bersilia",
+            "Serviks bagian dalam dilapisi epitel berlapis pipih tanpa keratin",
+            "Pada saat fase ovulasi sekresi kelenjar serviks sangat encer"
+        ],
+        answer: 4,
+        explain: "Saat ovulasi dominan estrogen sehingga mukus serviks menjadi encer."
+    },
+    {
+        q: "Pernyataan yang benar untuk corpus luteum adalah:",
+        options: [
+            "Terdiri dari jaringan ikat padat",
+            "Merupakan sisa oosit yang mengalami atresia",
+            "Dibentuk oleh sel granulosa dan sel teka",
+            "Terutama memproduksi hormon estrogen",
+            "Ditemukan pada ovarium wanita pre dan post pubertas"
+        ],
+        answer: 2,
+        explain: "Corpus luteum terbentuk dari luteinisasi sel granulosa dan teka."
+    },
+    {
+        q: "Struktur pada tuba fallopi yang berperan memberi nutrisi untuk oosit dan embrio adalah:",
+        options: [
+            "Goblet cell",
+            "Sel kolumnar bersilia",
+            "Otot polos",
+            "Peg cell",
+            "Lamina propria"
+        ],
+        answer: 3,
+        explain: "Peg cells bersifat sekretorik dan memberi nutrisi."
+    },
+    {
+        q: "Sesuai dengan perkembangan fungsi reproduksi yang normal, seharusnya sebelum terjadinya menstruasi , maka pada  ovarium akan terjadi pertumbuhan folikel  berupa:",
+        options: [
+            "Terjadi deposisi lemak pada folikel antral",
+            "Satu folikel menjadi folikel de Graaf pada setiap siklus bulanan",
+            "Penambahan lapisan granulosa pada fase luteal",
+            "Folikel primer memiliki antrum yang mensekresikan estrogen",
+            "Terbentuk korpus luteum pada fase folikular"
+        ],
+        answer: 1,
+        explain: "Pada tiap siklus biasanya satu folikel dominan berkembang menjadi folikel de Graaf. Folikel primordial → folikel primer → folikel sekunder (dibentuk sel theca interna dan eksterna) → folikel antral (menghasilkan esterogen) → folikel de graaf (paling matang)"
+    },
+    {
+        q: "Pernyataan benar tentang genital duct adalah:",
+        options: [
+            "Tubuli recti disusun oleh sel sertoli dan sel spermatogenik",
+            "Rete testis disusun oleh sel epitel tinggi dan rendah seperti ductus efferens",
+            "Tubuli recti menghantarkan spermatozoa dari rete testis ke epididimis",
+            "Ductus efferent disusun oleh sel sertoli dan sel kuboid",
+            "Tubuli recti disusun oleh sel sertoli dan sel kuboid"
+        ],
+        answer: 4,
+        explain: "Tubuli recti tidak memiliki sel spermatogenik; dilapisi sel sertoli dan kuboid."
+    },
+    {
+        q: "Pernyataan yang benar tentang kelenjar prostat adalah:",
+        options: [
+            "Memproduksi cairan untuk lubrikasi uretra",
+            "Merupakan tempat penyimpanan spermatozoa sebelum ejakulasi",
+            "Memproduksi cairan kaya fruktosa",
+            "Memproduksi cairan kaya enzim proteolitik",
+            "Memberikan kontribusi paling besar pada volume semen"
+        ],
+        answer: 3,
+        explain: "Prostat menghasilkan cairan dengan enzim proteolitik, bukan fruktosa atau volume terbesar."
+    },
+    {
+        q: "Ada struktur pada sistem reproduksi pria yang berkontribusi pada pembentukan cairan semen; Vesikula seminalis, kelenjar prostat, dan kelenjar Cowper.Pernyataan yang tidak sesuai tentang kelenjar prostat adalah:",
+        options: [
+            "Mengeluarkan cairan alkali yang menetralkan lingkungan asam vagina",
+            "Baik prostat maupun vesika seminalis menyediakan nutrisi untuk metabolisme sperma",
+            "Terletak di pangkal uretra",
+            "Menyumbang prostaglandin yang mempengaruhi motilitas dan transportasi sperma",
+            "Cairan alkalinya melindungi sperma dari lingkungan asam vagina"
+        ],
+        answer: 3,
+        explain: "Prostaglandin terutama berasal dari vesikula seminalis, bukan prostat."
+    },
+    {
+        q: "Peristiwa yang terjadi saat spermiogenesis adalah:",
+        options: [
+            "Pengurangan sitoplasma, mitosis, pembentukan akrosom",
+            "Pengurangan sitoplasma, meiosis, pembentukan akrosom",
+            "Pemadatan kromosom, pembentukan flagela, pembentukan akrosom",
+            "Pemadatan kromosom, meiosis, pembentukan akrosom",
+            "Pemadatan kromosom, miosis, pembentukan akrosom"
+        ],
+        answer: 2,
+        explain: "Spermiogenesis adalah perubahan bentuk spermatid: kondensasi inti, pembentukan akrosom dan flagel."
+    },
+    {
+        q: "Aktivitas seksual pria terdiri dari empat fase yaitu perangsangan, mendatar, orgasme dan resolusi. Pada saat ereksi, pelebaran arteriola penis dipengaruhi oleh:",
+        options: [
+            "Penurunan produksi nitric oxide oleh endotel",
+            "Kontraksi otot rangka dasar penis",
+            "Hormon testosteron",
+            "Peningkatan rangsang parasimpatis",
+            "Peningkatan rangsang simpatis"
+        ],
+        answer: 3,
+        explain: "Ereksi dimediasi parasimpatis."
+    },
+    {
+        q: "Pertumbuhan rambut saat pubertas pria terutama dikendalikan oleh hormon:",
+        options: [
+            "Androgen",
+            "Testosterone",
+            "GnRH",
+            "LH",
+            "FSH"
+        ],
+        answer: 1,
+        explain: "Pertumbuhan rambut seksual sekunder dikendalikan oleh testosterone."
+    },
+    {
+        q: "Pelepasan enzim dari kepala sperma untuk menembus zona pellucida disebut:",
+        options: [
+            "Capacitation reaction",
+            "Acrosomal reaction",
+            "Fertilization",
+            "Cortical reaction",
+            "Maturation"
+        ],
+        answer: 1,
+        explain: "Reaksi akrosom melepaskan enzim untuk penetrasi oosit."
+    },
+    {
+        q: "Pernyataan yang benar mengenai perkembangan genitalia laki-laki adalah:",
+        options: [
+            "SF1 bekerja sama dengan SOX9 menurunkan konsentrasi AMH",
+            "SRY adalah gen utama pembentukan mesonephric duct",
+            "SF1 meningkatkan ekspresi enzim sintesis dihydrotestosterone",
+            "SRY dan SOX9 menginduksi testis mengeluarkan FGF9",
+            "Kompleks reseptor dihidrotestosteron memodulasi diferensiasi genetalia interna"
+        ],
+        answer: 3,
+        explain: "SRY dan SOX9 berperan pada diferensiasi testis dan jalur FGF9."
+    },
+    {
+        q: "PSelama periode siklus bulanan wanita, perubahan pada ovarium dapat terjadi dikarenakan oleh pengaruh hormonal yang disekresikan oleh hipofisis anterior. Pada fase folikuler awal yang terjadi pada ovarium ditandai oleh perubahan berikut",
+        options: [
+            "Pembesaran diameter ovum dua sampai tiga kali lipat dan diikuti dengan berkembangnya lapisan sel-sel granulosa pada folikel",
+            "Sel-sel granulosa pada folikel menimbulkan pertumbuhan yang progresif reticulum endoplasmic yang membentuk androgen yang akan diubah oleh enzim aromatase dalam sel-sel granulosa menjadi estrogen dan folikel menjadi folikel mature",
+            "Dalam beberapa jam pertama pada fase ini, sel-sel granulosa dan theca interna berubah secara pesat menjadi sel-sel lutein",
+            "Hormon LH merupakan hal yang penting dalam tahap ini, tanpa hormon ini, folikel tidak akan berkembang menjadi folikel antral untuk mensekresikan estrogen",
+            "Tonjolan dinding luar dari folikel mengalami swelling, dan area kecil di tengah kapsul folikuler yang disebut dengan stigma menonjol seperti nipple"
+        ],
+        answer: 0,
+        explain: "Fase folikuler awal ditandai pertumbuhan folikel oleh FSH. Pengaruh FSH – folikel akan berkembang – hingga folikel antral terbentuk baru estrogen akan meningkat"
+    },
+    {
+        q: "Seorang gadis remaja bernama Nadia diantar ibunya berkonsultasi dengan dokter karena sampai saat ini belum mengalami menarche padahal sudah berumur 15 tahun. Ibunya menjadi khawatir karena teman-teman Nadia kebanyakan sudah mengalami menstruasi. Secara fisik Nadia tampak normal sebagaimana halnya remaja wanita lainnya. Mengacu pada rencana follow up dokter, Jika sampai umur 18 tahun ternyata Nadia belum juga mengalami menarche, maka dokter akan memeriksa salah satu hormone berikut, KECUALI:",
+        options: [
+            "Prolaktin",
+            "LH",
+            "FSH",
+            "Estrogen",
+            "GnRH"
+        ],
+        answer: 4,
+        explain: "GnRH tidak rutin diperiksa serum secara klinis seperti hormon lain."
+    },
+    {
+        q: "Hormon yang dikeluarkan ovarium bila estradiol dan progesteron telah cukup adalah:",
+        options: [
+            "LH",
+            "FSH",
+            "Activin",
+            "Prolaktin",
+            "Inhibin"
+        ],
+        answer: 4,
+        explain: "Inhibin dari ovarium menekan FSH saat kadar hormon ovarium cukup."
+    },
+    {
+        q: "Hormon yang meningkat saat ovulasi adalah:",
+        options: [
+            "Estradiol",
+            "Progesterone",
+            "AMH",
+            "Luteinizing hormone",
+            "Follicle stimulating hormone"
+        ],
+        answer: 3,
+        explain: "Ovulasi dipicu oleh LH surge."
+    },
+    {
+        q: "Secara fisiologis pada fase luteal perubahan folikel menjadi struktur corpus luteum berhubungan dengan pernyataan berikut:",
+        options: [
+            "Sel granulosa dalam corpus luteum membentuk reticulum endoplasmic yang progresif yang memproduksi hormon progesteron dan estrogen dalam jumlah banyak, dan jumlah hormon progesteron lebih tinggi dibanding estrogen.",
+            "Progesteron yang disekresikan oleh corpus luteum selama fase luteal memiliki feedback yang kuat terhadap kelenjar pituitary anterior dalam mempertahankan tingkat sekresi LH yang tinggi",
+            "Perubahan sel-sel granulosa dan theca interna menjadi sel-sel lutein sangat bergantung pada GnRH yang disekresikan oleh kelenjar pituitary anterior",
+            "Dalam tahap awal fase ini, terhentinya sekresi progesteron oleh corpus luteum menimbulkan penurunan jumlah FSH",
+            "Terjadi pertumbuhan corpus luteum menjadi folikel antrum yang dominan mensekresikan hormone estrogen dibawah pengaruh hormon FSH yang disekresikan oleh hipofisis anterio"
+        ],
+        answer: 0,
+        explain: "Corpus luteum dominan menghasilkan progesteron lebih tinggi daripada estrogen."
+    },
+    {
+        q: "Dina, seorang pekerja di sebuah bank swasta memiliki siklus menstruasi selama 28 hari. Pada saat remaja, Dina pernah mengalami siklus menstruasi yang lebih panjang saat remaja, yaitu siklus 35 hari. Perubahan siklus menstruasi Dina dapat terjadi dipengaruhi oleh faktor hormonal yang mengatur fungsi reproduksinya. Di bawah ini termasuk dalam tiga hierarki hormon tersebut, KECUALI:",
+        options: [
+            "Hormon yang dilepas hypothalamus, CRH",
+            "Estrogen dan progesteron ovarium",
+            "FSH dari hipofisis anterior",
+            "LH dari hipofisis anterior",
+            "GnRH dari hypothalamus"
+        ],
+        answer: 0,
+        explain: "Aksis reproduksi menggunakan GnRH, FSH, LH, estrogen, progesteron; bukan CRH."
+    },
+    {
+        q: "Gangguan pembentukan neural plate minggu 3-8 embrio dapat menyebabkan:",
+        options: [
+            "Anencephaly dan spina bifida",
+            "Caudal dysgenesis",
+            "Teratoma",
+            "Situs inversus",
+            "Gastroschisis"
+        ],
+        answer: 0,
+        explain: "Neural tube defect mencakup anencephaly dan spina bifida."
+    },
+    {
+        q: "Untuk mencegah anencephaly dan NTD, suplementasi yang dianjurkan adalah:",
+        options: [
+            "Zat besi 6 mg/hari trimester 2-3",
+            "Vitamin A 800-850 mcg/hari",
+            "Progesterone",
+            "Asupan protein tinggi",
+            "Asam folat 400 mcg/hari mulai 3 bulan sebelum kehamilan"
+        ],
+        answer: 4,
+        explain: "Profilaksis NTD menggunakan asam folat sebelum konsepsi."
+    },
+    {
+        q: "Pada stadium apakah embrio melakukan implantasi di uterus?",
+        options: [
+            "Morula",
+            "Blastocyst",
+            "2 sel",
+            "8 sel",
+            "Pronuclei"
+        ],
+        answer: 1,
+        explain: "Implantasi terjadi pada stadium blastokista."
+    },
+    {
+        q: "Chromosome translocation adalah:",
+        options: [
+            "Sebagian chromosome terbalik",
+            "Sebagian chromosome hilang",
+            "Satu chromosome hanya memiliki 1 copy",
+            "Sebagian chromosome mengalami duplikasi",
+            "Sebagian chromosome melekat pada chromosome lain"
+        ],
+        answer: 4,
+        explain: "Translokasi berarti segmen kromosom berpindah atau melekat pada kromosom lain."
+    },
+    {
+        q: "Aneuploidy adalah:",
+        options: [
+            "Mosaicism",
+            "Monosomy",
+            "Kelainan jumlah kromosom",
+            "Tetrasomy",
+            "Trisomy"
+        ],
+        answer: 2,
+        explain: "Aneuploidy adalah kelainan jumlah kromosom."
+    },
+    {
+        q: "Peristiwa penting pada minggu kedua perkembangan embrio adalah:",
+        options: [
+            "Terbentuk somites",
+            "Terbentuk bilaminar germ disc",
+            "Terbentuk gastrulation",
+            "Terbentuk trilaminar germ disc",
+            "Migrasi sel membentuk ventral dan dorsal embrio"
+        ],
+        answer: 1,
+        explain: "Minggu kedua ditandai bilaminar germ disc: epiblast dan hypoblast."
+    },
+    {
+        q: "Signal yang diperlukan untuk pembentukan bagian kiri janin adalah:",
+        options: [
+            "Chordin, noggin, follistatin",
+            "AVE mengekspresikan OTX2, LIM1, HESX1",
+            "Brachyury T",
+            "BMP4 dan FGF8",
+            "Nodal, LEFTY-2, PITX-2, serotonin"
+        ],
+        answer: 4,
+        explain: "Lateralisasi kiri melibatkan Nodal, Lefty, PITX2, dan serotonin."
+    },
+    {
+        q: "Organ abdomen masuk ke cavum thorax melalui defek diafragma kiri disebut:",
+        options: [
+            "Cloacal exstrophy",
+            "Gastroschisis",
+            "Ectopia cordis",
+            "Congenital diaphragmatic hernia",
+            "Omphalocele"
+        ],
+        answer: 3,
+        explain: "Hernia diafragmatika kongenital karena kegagalan penutupan membran pleuroperitoneal."
+    },
+    {
+        q: "Perbedaan obstetric date dan embryonic date adalah:",
+        options: [
+            "Embryonic date 2 minggu lebih awal",
+            "Embryonic date 4 minggu lebih awal",
+            "Obstetric date 2 minggu lebih awal",
+            "Obstetric date 3 minggu lebih awal",
+            "Obstetric date 4 minggu lebih awal"
+        ],
+        answer: 2,
+        explain: "Usia obstetri dihitung dari HPHT, sekitar 2 minggu lebih awal dari usia embrio."
+    },
+    {
+        q: "Yang dibentuk dari ektoderm adalah:",
+        options: [
+            "Limpa dan korteks adrenal",
+            "Sistem pembuluh darah dan urogenital",
+            "Somites menjadi myotome, sclerotome, dermatome",
+            "Sistem saraf, epitel sensori, kulit, kuku, hipofisis, enamel gigi, kelenjar keringat",
+            "Mesotelium dan serosa"
+        ],
+        answer: 3,
+        explain: "Ektoderm membentuk sistem saraf, epidermis, enamel, dan struktur sensorik."
+    },
+    {
+        q: "Masalah kongenital yang menyebabkan inkontinensia alvi, kecuali:",
+        options: [
+            "Meningokel",
+            "Penyakit Hirschsprung",
+            "Myelomeningokel",
+            "Spina bifida",
+            "Omfalokel"
+        ],
+        answer: 4,
+        explain: "Omfalokel tidak menyebabkan inkontinensia alvi."
+    },
+    {
+        q: "Kehamilan paling berisiko untuk terjadinya kelainan genetik pada:",
+        options: [
+            "Trimester 3",
+            "Trimester 2",
+            "Trimester 2 dan 3",
+            "Trimester 1 dan 2",
+            "Trimester 1"
+        ],
+        answer: 4,
+        explain: "Trimester pertama adalah masa organogenesis dan paling rentan."
+    },
+    {
+        q: "Penyebab paling umum first-trimester pregnancy loss adalah:",
+        options: [
+            "Fetal chromosomal abnormalities",
+            "Uterine anomalies",
+            "Intrauterine infection",
+            "Incompetent cervix",
+            "Hereditary"
+        ],
+        answer: 0,
+        explain: "Abortus trimester pertama paling sering disebabkan kelainan kromosom janin."
+    },
+    {
+        q: "Screening diabetes gestasional dimulai sejak usia kehamilan:",
+        options: [
+            "32 minggu",
+            "16 minggu",
+            "24 minggu",
+            "20 minggu",
+            "28 minggu"
+        ],
+        answer: 2,
+        explain: "Skrining GDM umumnya dimulai pada 24-28 minggu."
+    },
+    {
+        q: "Wanita yang telah 4 kali hamil cukup bulan dan salah satunya kembar ditulis sebagai:",
+        options: [
+            "Gravida 5 para 4",
+            "Gravida 4 para 3",
+            "Gravida 4 para 4",
+            "Gravida 5 para 5",
+            "Gravida 4 para 5"
+        ],
+        answer: 4,
+        explain: "Gravida 4 karena hamil 4 kali, para 5 karena total bayi viable yang dilahirkan ada 5."
+    },
+    {
+        q: "Terapi lini pertama untuk diabetes gestasional adalah:",
+        options: [
+            "Glibenclamide",
+            "Omega-3",
+            "Metformin",
+            "Insulin",
+            "Aspirin"
+        ],
+        answer: 3,
+        explain: "Dalam catatan ini kunci diarahkan ke insulin."
+    },
+    {
+        q: "Wanita yang dapat diklasifikasikan sebagai nulligravida adalah:",
+        options: [
+            "A 30-year-old who has never been pregnant before",
+            "A 23-year-old pregnant for the first time at 22 weeks",
+            "A 25-year-old 6 weeks postpartum after first term delivery",
+            "A 19-year-old with previous medical abortion",
+            "A 34-year-old with two previous miscarriages at 8 weeks"
+        ],
+        answer: 0,
+        explain: "Nulligravida berarti belum pernah hamil sama sekali."
+    },
+    {
+        q: "Gerakan janin biasanya pertama kali dirasakan ibu pada usia kehamilan sekitar:",
+        options: [
+            "8 weeks",
+            "16 weeks",
+            "12 weeks",
+            "22 weeks",
+            "14 weeks"
+        ],
+        answer: 1,
+        explain: "Quickening biasanya mulai dirasakan sekitar 16-20 minggu, terutama pada primigravida."
+    },
+    {
+        q: "Wanita yang merencanakan kehamilan dan harus menerima 0,4-0,8 mg folat tambahan adalah:",
+        options: [
+            "Those with proven folate deficiency",
+            "All women",
+            "Those with high blood pressure history",
+            "Those with previous child affected by NTD",
+            "Those who do not receive adequate grains"
+        ],
+        answer: 1,
+        explain: "Semua wanita yang merencanakan kehamilan dianjurkan suplementasi folat."
+    },
+    {
+        q: "Menambah 7 hari pada HPHT dan mundur 3 bulan untuk menghitung HPL disebut:",
+        options: [
+            "Kessner rule",
+            "Naegele rule",
+            "Chadwick rule",
+            "William rule",
+            "Hegar rule"
+        ],
+        answer: 1,
+        explain: "Itu adalah rumus Naegele."
+    },
+    {
+        q: "Pernyataan-pernyataan ini adalah gambaran dari female pelvis",
+        options: [
+            "Subpubic angle lebih sempit dari laki-laki –",
+            "Acetabulum lebih besar dari laki-laki",
+            "False pelvisnya lebih dalam dan vertikal dari laki-lak",
+            "Pelvic outletnya lebih kecil dari laki-lak",
+            "Obturator foramen berbentuk oval sedangkan laki-laki bulat"
+        ],
+        answer: 4,
+        explain: "a. Subpubic angle lebih sempit dari laki-laki – wanita : lebih lebar b. Acetabulum lebih besar dari laki-laki – wanita : lebih kecil c. False pelvisnya lebih dalam dan vertikal dari laki-laki – wanita : dangkal d. Pelvic outletnya lebih kecil dari laki-laki – wanita : dalam e. Obturator foramen berbentuk oval sedangkan laki-laki bulat"
+    },
+    {
+        q: "Seminal glands medapatkan vascularisasi dari arteri?",
+        options: [
+            "Superior rectal, middle rectal",
+            "Superior rectal, superior vesical",
+            "Inferior vesical, middle rectal",
+            "Middle vesical, middle rectal",
+            "Inferior vesical, superior rectal"
+        ],
+        answer: 2,
+        explain: "arteri pada seminal glands dari inferior vesical and middle rectal arteries. vena yang berjalan beriringan memiliki nama yang sama. illiac lymph nodes menerima limfe dari seminal glands dan diberi nama external illiac nodes dari bagian superior dan internal illiac lymph nodes dari bagian inferior." },
+    {
+        q: "Diaphrama pelvic dibentuk oleh otot-otot dibawah ini, kecuali : ",
+        options: [
+            " Puboccoccygeus muscles",
+            "Puborectal muscles",
+            "Ischiococcygeus muscles",
+            "Iliococcygeus muscles",
+            "Coccygeus muscles"
+        ],
+        answer: 2,
+        explain: "" },
+{
+        q: "Seorang gadis remaja bernama Nadia diantar ibunya berkonsultasi dengan dokter karena sampai saat ini belum mengalami menarche padahal sudah berumur 15 tahun. Ibunya menjadi khawatir karena teman- t eman Nadia kebanyakan sudah mengalami menstruasi. Secara fisi k Nadia tampak normal sebagaimana halnya remaja wanita lainnya. Setelah berumur 25 tahun, kemudian Nadia memiliki siklus bulanan atau siklus menstruasi dengan pola siklus 28 hari. Sehingga fase luteal Nadia terjadi pada hari ke- 1 5- 2 8, dan fase luteal ditan dai oleh peristiwa berikut, KECUALI:   ",
+        options: [
+            "Salah satu folikel pada ovarium diameternya membesar dan erbentuk sel- s el teka yang memproduksi estrogen ",
+            "Jika tidak terjadi kehamilan maka corpus luteum mengalami luteolysis dengan adanya keterlibatan estrogen dan prostaglandin, dan membentuk jaringan parut. ",
+            "Fungsi corpus akan luteum menurun pada akhir fase ini kecuali jika diproduksi nya human chorionic gonadotropin yang di produksi karena proses kehamilan.",
+            "Sel-sel granulosa mengalami luteinisasi dengan bentukan sel-sel teka lutein yang baru di sekitar stroma ovarium",
+            "Setelah ovulasi, sisa sel- s el granulosa yang tidak dilepaskan bersama sel elur dari folikel akan berlanjut membesar, membentuk menyerupai vakuola, dan mulai mengakumulasikan pigmen yang disebut lutein"
+        ],
+        answer: 4,
+        explain: "Luteal –  pembentukan corpus luteal" },
+        {
+        q: "Ketika terjadinya ovulasi, sel telur bersamaan dengan ribuan sel- sel granulosa yang membentuk corona radiata dilepaskan secara langsung ke rongga peritoneum dan akanmemasukisalahsatudaritubafalopi.Setelahpembuahanterjadi,waktuyang dibutuhkan untu k pengangkutan sel telur yang telah dibuahi melalui tuba falopi ke dalam rongga uterus biasanya adalah selama 3 sampai 5 hari. Pernyataan berikut adalah benar sesuai dengan p eristiwa kehamilan,  K ECUALI:   ",
+        options: [
+            "Corpus luteum menghilang sebelum minggu kedua kehamilan, dalam periode tersebut, plasenta mensekresikan jumlah progesteron dan estrogen dengan konsentrasi tertinggi.",
+            "Progesteron merupakan hormon penting dalam berhasilnya suatu kehamilan, dimana hal itu menyebabkan sel- s el decidual berkembang di endometrium rahim, dan sel- s el ini memiliki peran penting dalam menutrisi embrio pada awal kehamilan",
+            "Human chorionic gonadotropin (hCG) akan mempertahankan corpus luteum dan mencegah menstruasi",
+            "Wanita hamil biasanya mengalami peningkatan sekresi aldosteron sebesar dua kali lipat, dan mencapai puncaknya pada akhir kehamilan serta menimbulkan kecenderungan penyerapan kembali kelebihan sodium dalam tubulus ginjal",
+            "Dalam kehamilan, peluruhan endometrium dari dinding rahim dicegah oleh sekresi human chorionic gonadotropin setelah zigote mengalamiimplantasi."
+        ],
+        answer: 0,
+        explain: "" },
+        {
+        q: " ",
+        options: [
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+        answer: 2,
+        explain: "" },
+    ];
+
+// ================= LOGIC =================
+let current = 0;
+let userAnswers = new Array(questions.length).fill(null);
+
+function startQuiz(){
+    document.getElementById("home").style.display = "none";
+    document.getElementById("quizContainer").style.display = "block";
+    showQuestion();
+}
+
+function showQuestion(){
+    let q = questions[current];
+    let html = `<h3>${current + 1}. ${q.q}</h3><div class="options">`;
+
+    q.options.forEach((opt, i) => {
+        const selectedClass = userAnswers[current] === i ? "selected" : "";
+        html += `
+            <label class="${selectedClass}" onclick="selectAnswer(${i})">
+                <input type="radio" name="answer" ${userAnswers[current] === i ? "checked" : ""} style="margin-right:8px;">
+                ${opt}
+            </label>
+        `;
+    });
+
+    html += `</div>`;
+    document.getElementById("quiz").innerHTML = html;
+
+    document.getElementById("nav-buttons").innerHTML = `
+        <button onclick="prev()" ${current === 0 ? "disabled" : ""}>Prev</button>
+        <button onclick="next()">${current === questions.length - 1 ? "Finish" : "Next"}</button>
+    `;
+
+    document.getElementById("result").innerText = `Soal ${current + 1} / ${questions.length}`;
+}
+
+function selectAnswer(i){
+    userAnswers[current] = i;
+    showQuestion();
+}
+
+function next(){
+    if(current < questions.length - 1){
+        current++;
+        showQuestion();
+    } else {
+        finish();
+    }
+}
+
+function prev(){
+    if(current > 0){
+        current--;
+        showQuestion();
+    }
+}
+
+function finish(){
+    let score = 0;
+    let reviewHtml = "<h3>Hasil Quiz</h3>";
+
+    questions.forEach((q, idx) => {
+        const correct = userAnswers[idx] === q.answer;
+        if(correct) score++;
+
+        reviewHtml += `
+            <div style="margin-bottom:20px; padding:12px; border:1px solid #ddd; border-radius:8px;">
+                <b>${idx + 1}. ${q.q}</b><br>
+                Jawaban kamu: ${userAnswers[idx] !== null ? q.options[userAnswers[idx]] : "<i>Belum dijawab</i>"}<br>
+                Jawaban benar: <b>${q.options[q.answer]}</b><br>
+                <small>${q.explain}</small>
+            </div>
+        `;
+    });
+
+    document.getElementById("result").innerText = `Score: ${score} / ${questions.length}`;
+    document.getElementById("quiz").innerHTML = reviewHtml;
+    document.getElementById("nav-buttons").innerHTML = "";
+}
+</script>
+
+</body>
+</html>
