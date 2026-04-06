@@ -1,80 +1,279 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Quiz Simulator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulator Yuklatsol</title>
+  <style>
+    :root {
+      --bg1: #fff7ed;
+      --bg2: #eff6ff;
+      --card: rgba(255, 255, 255, 0.92);
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #f97316;
+      --primary-2: #ea580c;
+      --secondary: #0ea5e9;
+      --secondary-2: #0284c7;
+      --success-bg: #dcfce7;
+      --success-border: #22c55e;
+      --wrong-bg: #fee2e2;
+      --wrong-border: #ef4444;
+      --explain-bg: #fef3c7;
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+    }
 
-<style>
-body { font-family: Arial; margin:0; background:#f5f5f5; }
+    * {
+      box-sizing: border-box;
+    }
 
-.container {
-    max-width:800px;
-    margin:auto;
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    margin-top:40px;
-}
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #fde68a 0%, transparent 28%),
+        radial-gradient(circle at top right, #bfdbfe 0%, transparent 30%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      padding: 24px;
+    }
 
-.home {
-    text-align:center;
-    padding:100px 20px;
-}
+    .container {
+      max-width: 920px;
+      margin: 24px auto;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
 
-.go-btn {
-    font-size:24px;
-    padding:15px 40px;
-    background:#28a745;
-    color:white;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-}
+    .home {
+      text-align: center;
+      padding: 90px 24px;
+    }
 
-.timer { font-weight:bold; margin-bottom:10px; color:#dc3545; text-align:right; }
+    .badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f97316, #fb7185);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 18px;
+    }
 
-.options label {
-    display:block;
-    margin:8px 0;
-    padding:10px;
-    border:1px solid #ddd;
-    border-radius:6px;
-    cursor:pointer;
-}
+    h1 {
+      margin: 0 0 10px;
+      font-size: 38px;
+      line-height: 1.2;
+    }
 
-.selected {
-    background:#cce5ff !important;
-}
+    h3 {
+      margin-top: 0;
+    }
 
-button {
-    padding:10px 20px;
-    margin:5px;
-    border:none;
-    border-radius:6px;
-    background:#007bff;
-    color:white;
-    cursor:pointer;
-}
-</style>
+    .subtitle {
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 28px;
+    }
+
+    .go-btn,
+    .next-btn,
+    .restart-btn {
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 14px 26px;
+      font-size: 18px;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .go-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 12px 28px rgba(249, 115, 22, 0.35);
+    }
+
+    .next-btn,
+    .restart-btn {
+      background: linear-gradient(135deg, var(--secondary), var(--secondary-2));
+      box-shadow: 0 12px 28px rgba(14, 165, 233, 0.28);
+      margin-top: 18px;
+    }
+
+    .go-btn:hover,
+    .next-btn:hover,
+    .restart-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .meta-chip {
+      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      border: 1px solid #fdba74;
+      padding: 8px 14px;
+      border-radius: 999px;
+    }
+
+    #question {
+      font-size: 24px;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .options {
+      display: grid;
+      gap: 12px;
+    }
+
+    .options label {
+      display: block;
+      padding: 16px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.18s ease;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .options label:hover {
+      border-color: #7dd3fc;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(14, 165, 233, 0.1);
+    }
+
+    .options input {
+      margin-right: 10px;
+      transform: scale(1.1);
+      accent-color: var(--secondary);
+    }
+
+    .correct {
+      background: var(--success-bg) !important;
+      border-color: var(--success-border) !important;
+    }
+
+    .wrong {
+      background: var(--wrong-bg) !important;
+      border-color: var(--wrong-border) !important;
+    }
+
+    .explain {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: var(--explain-bg);
+      border-left: 6px solid #f59e0b;
+      line-height: 1.6;
+    }
+
+    .result {
+      text-align: center;
+      padding: 80px 24px;
+    }
+
+    .result-box {
+      background: linear-gradient(135deg, #eff6ff, #fdf2f8);
+      border: 1px solid #c4b5fd;
+      border-radius: 22px;
+      padding: 28px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .score-number {
+      font-size: 44px;
+      font-weight: 800;
+      margin: 14px 0;
+      color: #7c3aed;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .container {
+        padding: 20px;
+        border-radius: 20px;
+      }
+
+      .home {
+        padding: 60px 14px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      #question {
+        font-size: 20px;
+      }
+
+      .go-btn,
+      .next-btn,
+      .restart-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div id="home" class="container home">
-    <h1>Quiz Simulator</h1>
-    <button class="go-btn" onclick="startQuiz()">GO!</button>
-</div>
+  <div id="home" class="container home">
+    <div class="badge">Simulator Quiz</div>
+    <h1>CBT Asterion 22</h1>
+    <div class="subtitle">Lecture 1-14 · Reproductive System</div>
+    <button class="go-btn" type="button" id="startBtn">START QUIZ</button>
+  </div>
 
-<div id="quizContainer" class="container" style="display:none;">
-    <div class="timer">Waktu: <span id="time">00:00</span></div>
-    <h2 id="result"></h2>
-    <div id="quiz"></div>
-    <div id="nav-buttons"></div>
-</div>
+  <div id="quizContainer" class="container" style="display:none;">
+    <div class="meta">
+      <div id="meta" class="meta-chip"></div>
+      <div id="scoreInfo" class="meta-chip"></div>
+    </div>
 
-<script>
-// ================= DATA SOAL =================
-let questions = [
+    <h3 id="question"></h3>
+    <div id="options" class="options"></div>
+    <div id="explain" class="explain" style="display:none;"></div>
+    <button class="next-btn" type="button" id="nextBtn">Next</button>
+  </div>
+
+  <script>
+    let current = 0;
+    let currentOptions = [];
+    let score = 0;
+    let answered = false;
+
+    const homeEl = document.getElementById("home");
+    const quizEl = document.getElementById("quizContainer");
+    const metaEl = document.getElementById("meta");
+    const scoreInfoEl = document.getElementById("scoreInfo");
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const explainEl = document.getElementById("explain");
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const questions = [
     {
         q: "Pernyataan yang benar mengenai perineum, kecuali:",
         options: [
@@ -768,85 +967,107 @@ let questions = [
         explain: "" },
     ];
 
-// ================= LOGIC =================
-let current = 0;
-let userAnswers = new Array(questions.length).fill(null);
+    startBtn.addEventListener("click", startQuiz);
+    nextBtn.addEventListener("click", nextQuestion);
 
-function startQuiz(){
-    document.getElementById("home").style.display = "none";
-    document.getElementById("quizContainer").style.display = "block";
-    showQuestion();
-}
+    function startQuiz() {
+      homeEl.style.display = "none";
+      quizEl.style.display = "block";
+      current = 0;
+      score = 0;
+      answered = false;
+      loadQuestion();
+    }
 
-function showQuestion(){
-    let q = questions[current];
-    let html = `<h3>${current + 1}. ${q.q}</h3><div class="options">`;
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
 
-    q.options.forEach((opt, i) => {
-        const selectedClass = userAnswers[current] === i ? "selected" : "";
+    function loadQuestion() {
+      answered = false;
+      explainEl.style.display = "none";
+      explainEl.innerText = "";
+
+      const q = questions[current];
+      metaEl.innerText = "Soal " + (current + 1) + " / " + questions.length;
+      scoreInfoEl.innerText = "Score: " + score;
+      questionEl.innerText = q.q;
+
+      currentOptions = q.options.map((opt, i) => ({
+        text: opt,
+        isCorrect: i === q.answer
+      }));
+
+      shuffleArray(currentOptions);
+
+      let html = "";
+      currentOptions.forEach((opt, i) => {
         html += `
-            <label class="${selectedClass}" onclick="selectAnswer(${i})">
-                <input type="radio" name="answer" ${userAnswers[current] === i ? "checked" : ""} style="margin-right:8px;">
-                ${opt}
-            </label>
+          <label>
+            <input type="radio" name="opt" data-index="${i}">
+            ${String.fromCharCode(65 + i)}. ${opt.text}
+          </label>
         `;
-    });
+      });
 
-    html += `</div>`;
-    document.getElementById("quiz").innerHTML = html;
+      optionsEl.innerHTML = html;
 
-    document.getElementById("nav-buttons").innerHTML = `
-        <button onclick="prev()" ${current === 0 ? "disabled" : ""}>Prev</button>
-        <button onclick="next()">${current === questions.length - 1 ? "Finish" : "Next"}</button>
-    `;
-
-    document.getElementById("result").innerText = `Soal ${current + 1} / ${questions.length}`;
-}
-
-function selectAnswer(i){
-    userAnswers[current] = i;
-    showQuestion();
-}
-
-function next(){
-    if(current < questions.length - 1){
-        current++;
-        showQuestion();
-    } else {
-        finish();
+      const radios = optionsEl.querySelectorAll('input[name="opt"]');
+      radios.forEach((radio) => {
+        radio.addEventListener("change", function () {
+          check(parseInt(this.dataset.index, 10));
+        });
+      });
     }
-}
 
-function prev(){
-    if(current > 0){
-        current--;
-        showQuestion();
+    function check(i) {
+      if (answered) return;
+      answered = true;
+
+      const labels = optionsEl.querySelectorAll("label");
+
+      labels.forEach((label, index) => {
+        if (currentOptions[index].isCorrect) {
+          label.classList.add("correct");
+        }
+        if (index === i && !currentOptions[index].isCorrect) {
+          label.classList.add("wrong");
+        }
+      });
+
+      if (currentOptions[i].isCorrect) {
+        score++;
+        scoreInfoEl.innerText = "Score: " + score;
+      }
+
+      explainEl.style.display = "block";
+      explainEl.innerText = "Penjelasan: " + questions[current].explain;
     }
-}
 
-function finish(){
-    let score = 0;
-    let reviewHtml = "<h3>Hasil Quiz</h3>";
+    function nextQuestion() {
+      if (!answered) return;
 
-    questions.forEach((q, idx) => {
-        const correct = userAnswers[idx] === q.answer;
-        if(correct) score++;
+      current++;
 
-        reviewHtml += `
-            <div style="margin-bottom:20px; padding:12px; border:1px solid #ddd; border-radius:8px;">
-                <b>${idx + 1}. ${q.q}</b><br>
-                Jawaban kamu: ${userAnswers[idx] !== null ? q.options[userAnswers[idx]] : "<i>Belum dijawab</i>"}<br>
-                Jawaban benar: <b>${q.options[q.answer]}</b><br>
-                <small>${q.explain}</small>
+      if (current < questions.length) {
+        loadQuestion();
+      } else {
+        document.body.innerHTML = `
+          <div class="container result">
+            <div class="result-box">
+              <div class="badge">Quiz Selesai</div>
+              <h2>Hasil Akhir</h2>
+              <div class="score-number">${score}/${questions.length}</div>
+              <p>Semoga quiz juga lancar ya!.</p>
+              <button class="restart-btn" type="button" onclick="location.reload()">Restart</button>
             </div>
+          </div>
         `;
-    });
-
-    document.getElementById("result").innerText = `Score: ${score} / ${questions.length}`;
-    document.getElementById("quiz").innerHTML = reviewHtml;
-    document.getElementById("nav-buttons").innerHTML = "";
-}
-</script>
-
+      }
+    }
+  </script>
 </body>
 </html>
